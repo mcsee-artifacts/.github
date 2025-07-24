@@ -176,38 +176,48 @@ fi
 echo ""
 
 # --- Step 5: Ask user about unpacking raw data ---
-echo "[?] The mcsee-data archive has been extracted. Do you want to unpack the raw data? (y/N)"
-read -r -p "" UNPACK_RAW_DATA
+
+# Option 1: Use read with the full prompt directly (recommended)
+# This is the most common and reliable way to ensure read waits for input
+read -r -p "[?] The mcsee-data archive has been extracted. Do you want to unpack the raw data? (y/N) " UNPACK_RAW_DATA
+
 UNPACK_RAW_DATA=${UNPACK_RAW_DATA,,} # Convert to lowercase
 
-if [[ "$UNPACK_RAW_DATA" == "y" ]]; then
-    echo "[>] User chose to unpack raw data."
+# Your subsequent logic for handling UNPACK_RAW_DATA
+case "$UNPACK_RAW_DATA" in
+    y|yes)
+        echo "[>] User chose to unpack raw data."
+        # Check if prepare_data.sh exists in the mcsee-data directory
+        if [ -f "$DATA_DIR/prepare_data.sh" ]; then
+            echo "[>] Changing directory to $DATA_DIR to run prepare_data.sh"
+            pushd "$DATA_DIR" > /dev/null || { echo "Error: Could not navigate into $DATA_DIR. Exiting."; exit 1; }
 
-    # Check if prepare_data.sh exists in the mcsee-data directory
-    if [ -f "$DATA_DIR/prepare_data.sh" ]; then
-        echo "[>] Changing directory to $DATA_DIR to run prepare_data.sh"
-        pushd "$DATA_DIR" > /dev/null || { echo "Error: Could not navigate into $DATA_DIR. Exiting."; exit 1; }
-
-        echo "[>] Making prepare_data.sh executable..."
-        chmod +x prepare_data.sh
-        if [ $? -eq 0 ]; then
-            echo "[>] Executing prepare_data.sh --decompress..."
-            ./prepare_data.sh --decompress
+            echo "[>] Making prepare_data.sh executable..."
+            chmod +x prepare_data.sh
             if [ $? -eq 0 ]; then
-                echo "[>] Raw data unpacked successfully."
+                echo "[>] Executing prepare_data.sh --decompress..."
+                ./prepare_data.sh --decompress
+                if [ $? -eq 0 ]; then
+                    echo "[>] Raw data unpacked successfully."
+                else
+                    echo "Error: prepare_data.sh --decompress failed. Check its output for details."
+                fi
             else
-                echo "Error: prepare_data.sh --decompress failed. Check its output for details."
+                echo "Error: Failed to make prepare_data.sh executable."
             fi
+            popd > /dev/null # Return to the original directory
         else
-            echo "Error: Failed to make prepare_data.sh executable."
+            echo "Warning: prepare_data.sh not found in $DATA_DIR. Skipping raw data unpacking."
         fi
-        popd > /dev/null # Return to the original directory
-    else
-        echo "Warning: prepare_data.sh not found in $DATA_DIR. Skipping raw data unpacking."
-    fi
-else
-    echo "[>] User chose NOT to unpack raw data."
-fi
+        ;;
+    n|no|"")
+        echo "[>] User chose NOT to unpack raw data."
+        ;;
+    *)
+        echo "[!] Invalid input. Assuming 'No' for raw data unpacking."
+        UNPACK_RAW_DATA="n"
+        ;;
+esac
 echo ""
 
 echo "[>] Setup complete!"
