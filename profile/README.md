@@ -6,8 +6,8 @@ Please refer to [comsec-group/mcsee](https://github.com/comsec-group/mcsee) for 
 
 ## Quickstart
 
-If you want to clone all artifact repositories, including the raw data (hosted on Zenodo) to reproduce our results, you can use the following script:
+If you want to clone all artifact repositories, including the raw data (hosted on Zenodo) to reproduce our results, you can use the [setup.sh](../setup.sh) script by running it as follows:
 
 ```
-curl -sL https://raw.githubusercontent.com/mcsee-artifacts/.github/main/setup.sh | bash
+bash <(curl -sL https://raw.githubusercontent.com/mcsee-artifacts/.github/main/setup.sh)
 ```
